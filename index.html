@@ -1,0 +1,2261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetable Kit Distribution Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #f1f8e9;
+            --primary-dark: #1b5e20;
+            --secondary: #37474f;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-main: #1a202c;
+            --text-muted: #4a5568;
+            --accent: #ff9800;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+            --glass: rgba(255, 255, 255, 0.8);
+            --border-radius: 24px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 3rem 2rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        header {
+            margin-bottom: 3.5rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 0.75rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 2rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 0.5rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+            transition: all 0.4s ease;
+        }
+
+        .chart-card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .chart-card h2 {
+            font-size: 1.4rem;
+            margin-bottom: 2rem;
+            color: var(--secondary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .chart-card h2::before {
+            content: "";
+            width: 5px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        .chart-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .table-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+
+        .table-card h2 {
+            font-size: 1.4rem;
+            margin-bottom: 2rem;
+            color: var(--secondary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .table-card h2::before {
+            content: "";
+            width: 5px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        .table-wrapper {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #edf2f7;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 1.25rem 1.5rem;
+            background: #f8fafc;
+            color: var(--secondary);
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        tr:hover td {
+            background: #fdfdfd;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .insights-section {
+            background: #ffffff;
+            padding: 3rem;
+            border-radius: var(--border-radius);
+            margin-top: 3rem;
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--primary);
+        }
+
+        .insights-section h2 {
+            color: var(--primary-dark);
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .insights-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .insights-list li {
+            position: relative;
+            padding: 1.5rem;
+            background: #f9fbf9;
+            border-radius: 12px;
+            color: var(--text-main);
+            border: 1px solid #f1f3f1;
+            transition: all 0.3s ease;
+        }
+
+        .insights-list li:hover {
+            border-color: var(--primary);
+            transform: scale(1.02);
+            background: #fff;
+        }
+
+        .insights-list li strong {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        @media (max-width: 1200px) {
+            .summary-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .insights-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="dashboard">
+        <header>
+            <h1>PROJECT PRAGATI
+                <BR> 
+            Input Support for Vegetable Cultivation</h1>
+            <p>Empowering local communities through sustainable agricultural support 🚜</p>
+        </header>
+
+        <div class="summary-grid" id="stats">
+            <!-- Stats will be populated by JS -->
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="chart-card">
+                <h2>📊 Social Category Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="socialChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>🎯 Priority Category Breakdown</h2>
+                <div class="chart-container">
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>📈 Top Caste (Jati) Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="casteChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>📍 Hamlet (Dhani/Badiya) Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="hamletChart"></canvas>
+                </div>
+            </div>
+
+            <div class="table-card full-width">
+                <h2>🏘️ Detailed Regional Analysis (Top Villages)</h2>
+                <div style="overflow-x: auto;">
+                    <table id="villageTable">
+                        <thead>
+                            <tr>
+                                <th>Village Name</th>
+                                <th>Kits Distributed</th>
+                                <th>Beneficiaries</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Table rows will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="insights-section" id="insights">
+            <h2>🧠 Key Analytical Insights</h2>
+            <ul class="insights-list" id="insightsList">
+                <!-- Insights will be populated by JS -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        Chart.register(ChartDataLabels);
+
+        const data = [
+            {
+                "Name": "Sunita devi",
+                "Relation": "Devkaran",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Shanti devi",
+                "Relation": "Sohan lal",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kanchan devi",
+                "Relation": "Madan",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Disab",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sugna devi",
+                "Relation": "Sambhu",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Seema devi",
+                "Relation": "Bheru lal",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Disab",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Santosh",
+                "Relation": "Mukesh",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Leela devi",
+                "Relation": "Jagdish",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Nosar",
+                "Relation": "Amar Nath",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Surma",
+                "Relation": "Prem",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Jasoda",
+                "Relation": "Bagdu",
+                "Hamlet": "Kesar Colony",
+                "Village": "Kharwa",
+                "SocialCategory": "SC",
+                "Caste": "Nayak",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Maya devi",
+                "Relation": "Laxman",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kamla devi",
+                "Relation": "Prabhu",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kamla devi",
+                "Relation": "Mishri lal",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Geeta devi",
+                "Relation": "Ladu",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Badami devi",
+                "Relation": "Ladu",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Panchu lal",
+                "Relation": "Sanwar",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kismat",
+                "Relation": "Raju",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Ghisi devi",
+                "Relation": "Gopal",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Norti devi",
+                "Relation": "Bhanu",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Sanwar lal",
+                "Relation": "Manna",
+                "Hamlet": "Surajpura",
+                "Village": "Surajpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sayari devi",
+                "Relation": "Mohan",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Sampati devi",
+                "Relation": "Sanwar Lal",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Ramesh",
+                "Relation": "Amarlal",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "SC",
+                "Caste": "Regar",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Rukma devi",
+                "Relation": "Jujhar",
+                "Hamlet": "Rebariya ki dhani",
+                "Village": "Kelu",
+                "SocialCategory": "OBC",
+                "Caste": "Rebari",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Dharma",
+                "Relation": "Makram",
+                "Hamlet": "Rebariya ki dhani",
+                "Village": "Kelu",
+                "SocialCategory": "OBC",
+                "Caste": "Rebari",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Samok devi",
+                "Relation": "Mangu",
+                "Hamlet": "Rebariya ki dhani",
+                "Village": "Kelu",
+                "SocialCategory": "OBC",
+                "Caste": "Rebari",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kamla devi",
+                "Relation": "Panna",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Sundari devi",
+                "Relation": "Narayan",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Jagdish",
+                "Relation": "devi lal",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Vimla devi",
+                "Relation": "Raju",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Biri devi",
+                "Relation": "Sanwar Lal",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kailashi devi",
+                "Relation": "Ram lal",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Manju",
+                "Relation": "Ashok",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "SC",
+                "Caste": "Megwanshi",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kailash",
+                "Relation": "Ganesh Megwanshi",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "SC",
+                "Caste": "Megwanshi",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Saga devi",
+                "Relation": "Gopi lal",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Bhanwar",
+                "Relation": "Jujhar",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "kelu",
+                "SocialCategory": "OBC",
+                "Caste": "Rebari",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Shanti devi",
+                "Relation": "Ghisa",
+                "Hamlet": "Bagriyo ki dhani",
+                "Village": "Kelu",
+                "SocialCategory": "OBC",
+                "Caste": "Bagariya",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Sugani devi",
+                "Relation": "Ghisa",
+                "Hamlet": "Bagriyo ki dhani",
+                "Village": "kelu",
+                "SocialCategory": "OBC",
+                "Caste": "Bagariya",
+                "Priority": "Disab",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sanwar",
+                "Relation": "Ghisa",
+                "Hamlet": "Bagriyo ki dhani",
+                "Village": "kelu",
+                "SocialCategory": "OBC",
+                "Caste": "Bagariya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sambhu",
+                "Relation": "Nathu",
+                "Hamlet": "Bagriyo ki dhani",
+                "Village": "kelu",
+                "SocialCategory": "OBC",
+                "Caste": "Bagariya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kamla devi",
+                "Relation": "Badar",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Shankar lal",
+                "Relation": "Magna",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Tara devi",
+                "Relation": "Lalchand",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Manju devi",
+                "Relation": "Ratan lal",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Surta Devi",
+                "Relation": "Suresh",
+                "Hamlet": "Bhil Basti",
+                "Village": "kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sanwara",
+                "Relation": "Badar",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Rekha",
+                "Relation": "Raju",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Dhali devi",
+                "Relation": "Ramesh",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Nena devi",
+                "Relation": "Gopal",
+                "Hamlet": "Bhil Basti",
+                "Village": "kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Amari devi",
+                "Relation": "Hagama",
+                "Hamlet": "Bhil Basti",
+                "Village": "Kelu",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Gyarasi devi",
+                "Relation": "Suresh",
+                "Hamlet": "Amarpura",
+                "Village": "Amarpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Seeta devi",
+                "Relation": "Gopal",
+                "Hamlet": "Amarpura",
+                "Village": "Amarpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Ladi devi",
+                "Relation": "Lalaram",
+                "Hamlet": "Amarpura",
+                "Village": "Amarpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Ratani devi",
+                "Relation": "Balu",
+                "Hamlet": "Amarpura",
+                "Village": "Amarpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Premi devi",
+                "Relation": "Dharma ram",
+                "Hamlet": "Amarpura",
+                "Village": "Amarpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Seeta devi",
+                "Relation": "Suwa lal",
+                "Hamlet": "Amarpura",
+                "Village": "Amarpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Badami devi",
+                "Relation": "Pappuram",
+                "Hamlet": "Amarpura",
+                "Village": "Amarpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Shanti devi",
+                "Relation": "Sanwara",
+                "Hamlet": "Amarpura",
+                "Village": "Amarpura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Pappu devi",
+                "Relation": "Rampal nath",
+                "Hamlet": "Meriya Mangari",
+                "Village": "Dedpura",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Indra devi",
+                "Relation": "Ramesh Nath",
+                "Hamlet": "Meriya Mangari",
+                "Village": "Dedpura",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Roshani devi",
+                "Relation": "Amarnath",
+                "Hamlet": "Meriya Mangari",
+                "Village": "Dedpura",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Laxmi devi",
+                "Relation": "Foji Nath",
+                "Hamlet": "Meriya Mangari",
+                "Village": "Dedpura",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Dali",
+                "Relation": "Nathu",
+                "Hamlet": "Lohar Basti",
+                "Village": "Piplaz",
+                "SocialCategory": "OBC",
+                "Caste": "Gadiya Lohar",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sugna",
+                "Relation": "Narayan",
+                "Hamlet": "Lohar Basti",
+                "Village": "Piplaz",
+                "SocialCategory": "OBC",
+                "Caste": "Gadiya Lohar",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sugna",
+                "Relation": "Suresh",
+                "Hamlet": "Lohar Basti",
+                "Village": "Piplaz",
+                "SocialCategory": "OBC",
+                "Caste": "Gadiya Lohar",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Jagdish",
+                "Relation": "Girdhari",
+                "Hamlet": "Lohar Basti",
+                "Village": "Piplaz",
+                "SocialCategory": "OBC",
+                "Caste": "Gadiya Lohar",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Indra devi",
+                "Relation": "Guman",
+                "Hamlet": "Ruparel Nadi",
+                "Village": "Ruparel Nadi",
+                "SocialCategory": "SC",
+                "Caste": "Nayak",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sajna devi",
+                "Relation": "Tejaram",
+                "Hamlet": "Ruparel Nadi",
+                "Village": "Ruparel Nadi",
+                "SocialCategory": "SC",
+                "Caste": "Nayak",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Rekha devi",
+                "Relation": "Chandan Nath",
+                "Hamlet": "Akrol",
+                "Village": "Akrol",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Geeta devi",
+                "Relation": "Rang Nath",
+                "Hamlet": "Akrol",
+                "Village": "Akrol",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sundri devi",
+                "Relation": "Dadam  Nath",
+                "Hamlet": "Akrol",
+                "Village": "Akrol",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Fula devi",
+                "Relation": "Ratan Nath",
+                "Hamlet": "Meriya Mangari",
+                "Village": "Dedpura",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kamla devi",
+                "Relation": "Deva",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Bhanwari devi",
+                "Relation": "Sohan",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Manju",
+                "Relation": "Gopal",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Laali dei",
+                "Relation": "Jagdiish",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Indra devi",
+                "Relation": "Sanwar lal",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Sarda devi",
+                "Relation": "Sambhu",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Choti devi",
+                "Relation": "Kailash",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kamla",
+                "Relation": "Heera",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Chanda devi",
+                "Relation": "Babu",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Jasoda",
+                "Relation": "Mahendra",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Seeta devi",
+                "Relation": "Shivkaran",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sunita devi",
+                "Relation": "Guman",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Manna devi",
+                "Relation": "Sambhu",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Premi devi",
+                "Relation": "Jetu",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Geeta devi",
+                "Relation": "Suresh",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Mousam devi",
+                "Relation": "Prabhu",
+                "Hamlet": "Bairwa Basti",
+                "Village": "Kushalpura",
+                "SocialCategory": "SC",
+                "Caste": "Bairwa",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Chuki devi",
+                "Relation": "Gulab",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "Other",
+                "Caste": "Rebari",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Prem devi",
+                "Relation": "Teju",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "Other",
+                "Caste": "Rebari",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Uchba devi",
+                "Relation": "Guman",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "Other",
+                "Caste": "Rebari",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sodan rebari",
+                "Relation": "Balu",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "Other",
+                "Caste": "Rebari",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Uchnna devi",
+                "Relation": "Narayan",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "Other",
+                "Caste": "Rebari",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Manju",
+                "Relation": "Kailash",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Kirap",
+                "SocialCategory": "Other",
+                "Caste": "Rebari",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sangita",
+                "Relation": "Doulat",
+                "Hamlet": "Harijan Basti",
+                "Village": "Kirap",
+                "SocialCategory": "SC",
+                "Caste": "Harijan",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Lalchand",
+                "Relation": "Bairu lal",
+                "Hamlet": "Harijan Basti",
+                "Village": "Kirap",
+                "SocialCategory": "SC",
+                "Caste": "Harijan",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kamla devi",
+                "Relation": "Ramkaran",
+                "Hamlet": "Lohar Basti",
+                "Village": "Kushalpura",
+                "SocialCategory": "OBC",
+                "Caste": "Gadiya Lohar",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Gyarasi",
+                "Relation": "Babu lal",
+                "Hamlet": "Lohar Basti",
+                "Village": "Kushalpura",
+                "SocialCategory": "OBC",
+                "Caste": "Gadiya Lohar",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Hagama Bairwa",
+                "Relation": "Hema Bairwa",
+                "Hamlet": "Bairwa Basti",
+                "Village": "Kushalpura",
+                "SocialCategory": "SC",
+                "Caste": "Bairwa",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Maya",
+                "Relation": "Pappu",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Shanti",
+                "Relation": "Kailash",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Seema devi",
+                "Relation": "Manaram",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Seeta devi",
+                "Relation": "Bhanwar",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Kali",
+                "Relation": "Chetan",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Dali",
+                "Relation": "Mangla",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Radha",
+                "Relation": "Durga",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Leela devi",
+                "Relation": "Om nath",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Santosh",
+                "Relation": "Omprakash",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Kamla",
+                "Relation": "Shankar",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Manju",
+                "Relation": "Pappu",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Bhanwari devi",
+                "Relation": "Bhanwar",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Shyama devi",
+                "Relation": "Sambhu",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Leela devi",
+                "Relation": "Nanuram",
+                "Hamlet": "Jhuto ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Chanta devi",
+                "Relation": "Babu lal",
+                "Hamlet": "Shivnagar",
+                "Village": "Shivnagar",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Ghani",
+                "Relation": "Ramlal",
+                "Hamlet": "Chado ka Badiya",
+                "Village": "Shivnagar",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sugna",
+                "Relation": "Hemraj",
+                "Hamlet": "Chado ka Badiya",
+                "Village": "Shivnagar",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kali",
+                "Relation": "devi lal",
+                "Hamlet": "Chado ka Badiya",
+                "Village": "Shivnagar",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Sukhi Bhil",
+                "Relation": "Kanhiya",
+                "Hamlet": "Kumharo ka Badiya",
+                "Village": "Ramgarh",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Asha devi",
+                "Relation": "Rakesh",
+                "Hamlet": "Ramgarh",
+                "Village": "Ramgarh",
+                "SocialCategory": "SC",
+                "Caste": "Harijan",
+                "Priority": "Widow",
+                "Kits": 1,
+                "Gender": "Female"
+            },
+            {
+                "Name": "Geeta devi",
+                "Relation": "Mittu",
+                "Hamlet": "Ramgarh",
+                "Village": "Ramgarh",
+                "SocialCategory": "SC",
+                "Caste": "Bhat",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Geeta devi",
+                "Relation": "Ramprasad",
+                "Hamlet": "Ramgarh",
+                "Village": "Ramgarh",
+                "SocialCategory": "SC",
+                "Caste": "Nat",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Raju Nath",
+                "Relation": "Mittu Nath",
+                "Hamlet": "Tikrana Gurjnan",
+                "Village": "Tikrana Gurjnan",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Omprakash",
+                "Relation": "Mittu Nath",
+                "Hamlet": "Tikrana Gurjnan",
+                "Village": "Tikrana Gurjnan",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Mittu Nath",
+                "Relation": "Mangu Nath",
+                "Hamlet": "Tikrana Gurjnan",
+                "Village": "Tikrana Gurjnan",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Manju devi",
+                "Relation": "Asmal",
+                "Hamlet": "Tikrana Gurjnan",
+                "Village": "Tikrana Gurjnan",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Nathu Nath",
+                "Relation": "Bhura Nath",
+                "Hamlet": "Suhawa",
+                "Village": "Suhawa",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Shivraj",
+                "Relation": "Girdhari",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Pooja devi",
+                "Relation": "Sampat",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Rekha devi",
+                "Relation": "Sanjay Harijan",
+                "Hamlet": "Shivpuri",
+                "Village": "Shivpuri",
+                "SocialCategory": "SC",
+                "Caste": "Harijan",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kamla devi",
+                "Relation": "Narayan",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Shivraj",
+                "Relation": "Ramdev",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Raju",
+                "Relation": "Ramdev",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kamla",
+                "Relation": "Prabhu",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Mora",
+                "Relation": "Banna",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "OBC",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Bhela",
+                "Relation": "Ishwar",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "OBC",
+                "Caste": "Rebari",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Bhagwati devi",
+                "Relation": "Hagami lal",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Radha",
+                "Relation": "Gopal",
+                "Hamlet": "Rebariyo ki dhani",
+                "Village": "Shivpuri",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Jyoti",
+                "Relation": "Pahalwan",
+                "Hamlet": "Shyopura",
+                "Village": "Shyopura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Pappu",
+                "Relation": "Babu",
+                "Hamlet": "Shyopura",
+                "Village": "Shyopura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Divyang",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Dungar lal",
+                "Relation": "Babu",
+                "Hamlet": "Shyopura",
+                "Village": "Shyopura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Manisha",
+                "Relation": "Babu",
+                "Hamlet": "Shyopura",
+                "Village": "Shyopura",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Kavita",
+                "Relation": "Setu",
+                "Hamlet": "Surajpura II",
+                "Village": "Surajpura II",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Neela devi",
+                "Relation": "Prakash",
+                "Hamlet": "Surajpura II",
+                "Village": "Surajpura II",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Seeta devi",
+                "Relation": "Madan",
+                "Hamlet": "Surajpura II",
+                "Village": "Surajpura II",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Durga",
+                "Relation": "Sanwar lal",
+                "Hamlet": "Surajpura II",
+                "Village": "Surajpura II",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Shanti",
+                "Relation": "Jeevan",
+                "Hamlet": "Surajpura II",
+                "Village": "Surajpura II",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Laxmi devi",
+                "Relation": "Kailash",
+                "Hamlet": "Surajpura II",
+                "Village": "Surajpura II",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Teena",
+                "Relation": "Setu",
+                "Hamlet": "Surajpura II",
+                "Village": "Surajpura II",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Pani  devi",
+                "Relation": "Mishri lal",
+                "Hamlet": "Surajpura II",
+                "Village": "Surajpura II",
+                "SocialCategory": "ST",
+                "Caste": "Bhil",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            },
+            {
+                "Name": "Amar Nath",
+                "Relation": "Chunni Nath",
+                "Hamlet": "Surajpura II",
+                "Village": "Surajpura II",
+                "SocialCategory": "OBC",
+                "Caste": "Kalbeliya",
+                "Priority": "Married",
+                "Kits": 1,
+                "Gender": "Not Specified"
+            }
+        ];
+
+        function initDashboard() {
+            const totalBeneficiaries = data.length;
+            const totalKits = data.reduce((acc, curr) => acc + curr.Kits, 0);
+            const totalVillages = [...new Set(data.map(d => d.Village))].length;
+            const avgKits = (totalKits / totalBeneficiaries).toFixed(2);
+            const widowsCount = data.filter(d => d.Priority === 'Widow').length;
+            const divyangCount = data.filter(d => d.Priority === 'Divyang' || d.Priority === 'Disab').length;
+
+            // Populate Stats
+            const statsContainer = document.getElementById('stats');
+            const stats = [
+                { label: 'Beneficiaries 👥', value: totalBeneficiaries },
+                { label: 'Kits Distributed 🥗', value: totalKits },
+                { label: 'Villages Covered 📍', value: totalVillages },
+                { label: 'Priority Support ⭐', value: widowsCount + divyangCount }
+            ];
+
+            stats.forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `<h3>${s.label}</h3><div class="value">${s.value}</div>`;
+                statsContainer.appendChild(card);
+            });
+
+            // Prepare Chart Data
+            const socialCounts = countBy(data, 'SocialCategory');
+            const priorityCounts = countBy(data, 'Priority');
+            const casteCounts = countBy(data, 'Caste');
+            const hamletCounts = countBy(data, 'Hamlet');
+
+            createPieChart('socialChart', socialCounts, 'Social Category');
+            createDoughnutChart('priorityChart', priorityCounts, 'Priority Category');
+            createBarChart('casteChart', Object.entries(casteCounts).sort((a, b) => b[1] - a[1]).slice(0, 10), 'Top 10 Castes');
+            createBarChart('hamletChart', Object.entries(hamletCounts).sort((a, b) => b[1] - a[1]).slice(0, 10), 'Top 10 Hamlets');
+
+            // Populate Village Table
+            const villageAggregation = {};
+            data.forEach(d => {
+                const v = d.Village;
+                if (!villageAggregation[v]) villageAggregation[v] = { kits: 0, bens: 0 };
+                villageAggregation[v].kits += d.Kits;
+                villageAggregation[v].bens += 1;
+            });
+
+            const topVillages = Object.entries(villageAggregation)
+                .sort((a, b) => b[1].kits - a[1].kits)
+                .slice(0, 10);
+
+            const tableBody = document.querySelector('#villageTable tbody');
+            topVillages.forEach(([name, stats]) => {
+                const row = `<tr><td>${name}</td><td>${stats.kits}</td><td>${stats.bens}</td></tr>`;
+                tableBody.innerHTML += row;
+            });
+
+            // Generate Insights
+            const insightsSection = document.querySelector('.insights-section h2');
+            insightsSection.innerHTML = '🧠 Key Program Insights';
+
+            const insightsList = document.getElementById('insightsList');
+            const dominantSocial = Object.entries(socialCounts).sort((a, b) => b[1] - a[1])[0];
+            const femaleParticipation = ((data.filter(d => d.Gender === 'Female').length / totalBeneficiaries) * 100).toFixed(1);
+
+            const insights = [
+                `The distribution is heavily concentrated in the <strong>${dominantSocial[0]}</strong> social category, representing ${((dominantSocial[1] / totalBeneficiaries) * 100).toFixed(1)}% of beneficiaries.`,
+                `Widows and specially-abled individuals make up <strong>${(((widowsCount + divyangCount) / totalBeneficiaries) * 100).toFixed(1)}%</strong> of the total coverage, showing a strong focus on priority groups.`,
+                `A total of <strong>${totalVillages} villages</strong> were covered, with ${topVillages[0][0]} receiving the highest number of kits (${topVillages[0][1].kits}).`
+            ];
+
+            insights.forEach(text => {
+                const li = document.createElement('li');
+                li.innerHTML = text;
+                insightsList.appendChild(li);
+            });
+        }
+
+        function countBy(arr, key) {
+            return arr.reduce((acc, curr) => {
+                const val = curr[key] || 'Not Specified';
+                acc[val] = (acc[val] || 0) + 1;
+                return acc;
+            }, {});
+        }
+
+        const colors = [
+            '#2e7d32', '#1565c0', '#f9a825', '#6a1b9a',
+            '#c62828', '#283593', '#00838f', '#ef6c00',
+            '#4e342e', '#37474f', '#00695c', '#ad1457',
+            '#558b2f', '#f57f17', '#8e24aa', '#0277bd'
+        ];
+
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 2000,
+                easing: 'easeOutQuart'
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
+                datalabels: {
+                    color: '#1a1a1a',
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: 4,
+                    padding: 4,
+                    formatter: (value, ctx) => {
+                        let sum = 0;
+                        let dataArr = ctx.chart.data.datasets[0].data;
+                        dataArr.map(data => { sum += data; });
+                        let percentage = (value * 100 / sum).toFixed(1) + "%";
+                        return `${value}\n(${percentage})`;
+                    },
+                    font: { weight: 'bold' }
+                }
+            }
+        };
+
+        function createPieChart(id, counts, label) {
+            new Chart(document.getElementById(id), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{ data: Object.values(counts), backgroundColor: colors }]
+                },
+                options: {
+                    ...commonOptions,
+                    layout: {
+                        padding: 45
+                    },
+                    plugins: {
+                        ...commonOptions.plugins,
+                        datalabels: {
+                            ...commonOptions.plugins.datalabels,
+                            anchor: 'end',
+                            align: 'end',
+                            offset: 10,
+                            display: true,
+                            font: { size: 10, weight: 'bold' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDoughnutChart(id, counts, label) {
+            new Chart(document.getElementById(id), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{ data: Object.values(counts), backgroundColor: colors }]
+                },
+                options: {
+                    ...commonOptions,
+                    cutout: '60%',
+                    layout: {
+                        padding: 45
+                    },
+                    plugins: {
+                        ...commonOptions.plugins,
+                        datalabels: {
+                            ...commonOptions.plugins.datalabels,
+                            anchor: 'end',
+                            align: 'end',
+                            offset: 10,
+                            display: true,
+                            font: { size: 10, weight: 'bold' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createBarChart(id, entries, label) {
+            new Chart(document.getElementById(id), {
+                type: 'bar',
+                data: {
+                    labels: entries.map(e => e[0]),
+                    datasets: [{
+                        label: 'Count',
+                        data: entries.map(e => e[1]),
+                        backgroundColor: '#2e7d32',
+                        borderRadius: 6,
+                        barThickness: 24
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    indexAxis: 'y',
+                    layout: {
+                        padding: {
+                            right: 40
+                        }
+                    },
+                    plugins: {
+                        ...commonOptions.plugins,
+                        datalabels: {
+                            color: '#37474f',
+                            anchor: 'end',
+                            align: 'right',
+                            offset: 4,
+                            formatter: (v) => v,
+                            font: { weight: 'bold' },
+                            clip: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: false,
+                            grid: { display: false },
+                            grace: '10%'
+                        },
+                        y: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        initDashboard();
+    </script>
+</body>
+
+</html>
